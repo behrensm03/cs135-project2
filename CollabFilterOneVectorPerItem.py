@@ -82,8 +82,22 @@ class CollabFilterOneVectorPerItem(AbstractBaseCollabFilterSGD):
             Entry n is for the n-th pair of user_id, item_id values provided.
         '''
         # TODO: Update with actual prediction logic
-        N = user_id_N.size
-        yhat_N = ag_np.ones(N)
+        mu = self.mu
+        b_per_user = self.b_per_user
+        c_per_item = self.c_per_item
+        U = self.U
+        V = self.V
+
+        u_i = U[user_id_N]
+        v_j = V[user_id_N]
+        uv_sum = ag_np.sum(u_i * v_j, axis=1)
+
+        #N = user_id_N.size
+        #yhat_N = ag_np.ones(N)
+
+        b_i = b_per_user[user_id_N]
+        c_j = c_per_item[user_id_N]
+        yhat_N = mu + b_i + c_j + uv_sum
         return yhat_N
 
 
