@@ -58,8 +58,8 @@ class CollabFilterOneVectorPerItem(AbstractBaseCollabFilterSGD):
             mu=ag_np.ones(1),
             b_per_user=ag_np.ones(n_users), # FIX dimensionality
             c_per_item=ag_np.ones(n_items), # FIX dimensionality
-            U=0.001 * random_state.randn((n_users, self.n_factors)), # FIX dimensionality
-            V=0.001 * random_state.randn((n_items, self.n_factors)), # FIX dimensionality
+            U=0.001 * random_state.randn(n_users, self.n_factors), # FIX dimensionality
+            V=0.001 * random_state.randn(n_items, self.n_factors), # FIX dimensionality
             )
 
 
@@ -118,7 +118,14 @@ class CollabFilterOneVectorPerItem(AbstractBaseCollabFilterSGD):
         # TIP: use self.alpha to access regularization strength
         y_N = data_tuple[2]
         yhat_N = self.predict(data_tuple[0], data_tuple[1], **param_dict)
-        loss_total = 0.0
+
+        sumVsquared = ag_np.sum(ag_np.square(param_dict['V']))
+        sumUsquared = ag_np.sum(ag_np.square(param_dict['U']))
+        alphaTerm = self.alpha * (sumVsquared + sumUsquared)
+
+        errorTerm = ag_np.sum(y_N - yhat_N)
+
+        loss_total = alphaTerm + errorTerm
         return loss_total    
 
 
