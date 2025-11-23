@@ -13,6 +13,7 @@ import autograd.numpy as ag_np
 # Use helper packages
 from AbstractBaseCollabFilterSGD import AbstractBaseCollabFilterSGD
 from train_valid_test_loader import load_train_valid_test_datasets
+import matplotlib.pyplot as plt
 
 # Some packages you might need (uncomment as necessary)
 ## import pandas as pd
@@ -54,12 +55,12 @@ class CollabFilterOneVectorPerItem(AbstractBaseCollabFilterSGD):
         # TODO fix the lines below to have right dimensionality & values
         # TIP: use self.n_factors to access number of hidden dimensions
         self.param_dict = dict(
-            mu=ag_np.ones(1),
-            b_per_user=ag_np.ones(n_users), # FIX dimensionality
-            c_per_item=ag_np.ones(n_items), # FIX dimensionality
-            U=0.001 * random_state.randn(n_users, self.n_factors), # FIX dimensionality
-            V=0.001 * random_state.randn(n_items, self.n_factors), # FIX dimensionality
-            )
+            mu=ag_np.array(random_state.randn(1)),
+            b_per_user=ag_np.array(random_state.randn(n_users)),
+            c_per_item=ag_np.array(random_state.randn(n_items)),
+            U=random_state.randn(n_users, self.n_factors),
+            V=random_state.randn(n_items, self.n_factors),
+        )
 
 
     def predict(self, user_id_N, item_id_N,
@@ -122,7 +123,7 @@ class CollabFilterOneVectorPerItem(AbstractBaseCollabFilterSGD):
         sumUsquared = ag_np.sum(ag_np.square(param_dict['U']))
         alphaTerm = self.alpha * (sumVsquared + sumUsquared)
 
-        errorTerm = ag_np.sum(y_N - yhat_N)
+        errorTerm = ag_np.sum(ag_np.square(y_N - yhat_N))
 
         loss_total = alphaTerm + errorTerm
         return loss_total    
@@ -131,14 +132,18 @@ class CollabFilterOneVectorPerItem(AbstractBaseCollabFilterSGD):
 if __name__ == '__main__':
 
     # Load the dataset
-    train_tuple, valid_tuple, test_tuple, n_users, n_items = \
-        load_train_valid_test_datasets()
+    train_tuple, valid_tuple, test_tuple, n_users, n_items = load_train_valid_test_datasets()
     # Create the model and initialize its parameters
     # to have right scale as the dataset (right num users and items)
-    model = CollabFilterOneVectorPerItem(
-        n_epochs=10, batch_size=10000, step_size=0.1,
-        n_factors=2, alpha=0.0)
-    model.init_parameter_dict(n_users, n_items, train_tuple)
+    model1 = CollabFilterOneVectorPerItem(
+        n_epochs=100, batch_size=1000, step_size=0.5,
+        n_factors=50, alpha=0.0, random_state=42)
+    model1.init_parameter_dict(n_users, n_items, train_tuple)
+    model1.fit(train_tuple, valid_tuple)
+    plt.plot(model1.trace_epoch, model1.trace_rmse_valid, label='Val RMSE')
+    plt.plot(model1.trace_epoch, model1.trace_rmse_train, label='Train RMSE')
+    plt.legend()
+    plt.show()
 
-    # Fit the model with SGD
-    model.fit(train_tuple, valid_tuple)
+    
+
